@@ -39,6 +39,9 @@ jobs:
       - name: Generate final output
         run: xml2rfc output/spec.xml --v3 --html --pdf --text
 
+      - name: Remove gitignore from output
+        run: rm output/.gitignore
+
       - name: Compresses output
         uses: master-atul/tar-action@v1.0.2
         id: compressed_output
