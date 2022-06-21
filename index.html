@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>Robust File Transfer</title>
+<meta content="Alexander Maslew" name="author">
+<meta content="Frederic Schoenberger" name="author">
+<meta content="Jacek Kusnierz" name="author">
+<meta content="Eugenio Berretta" name="author">
+<meta content="Aleksandra Swierkowska" name="author">
+<meta content="xml2rfc 2.40.0" name="generator">
+<meta content="draft-group18-rft-02" name="ietf.draft">
+<link href="output/spec.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">/*
+
+  NOTE: Changes at the bottom of this file overrides some earlier settings.
+
+  Once the style has stabilized and has been adopted as an official RFC style,
+  this can be consolidated so that style settings occur only in one place, but
+  for now the contents of this file consists first of the initial CSS work as
+  provided to the RFC Formatter (xml2rfc) work, followed by itemized and
+  commented changes found necssary during the development of the v3
+  formatters.
+
+*/
+
+/* fonts */
+@import url('https://fonts.googleapis.com/css?family=Noto+Sans'); /* Sans-serif */
+@import url('https://fonts.googleapis.com/css?family=Noto+Serif'); /* Serif (print) */
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono'); /* Monospace */
+
+@viewport {
+  zoom: 1.0;
+  width: extend-to-zoom;
+}
+@-ms-viewport {
+  width: extend-to-zoom;
+  zoom: 1.0;
+}
+/* general and mobile first */
+html {
+}
+body {
+  max-width: 90%;
+  margin: 1.5em auto;
+  color: #222;
+  background-color: #fff;
+  font-size: 14px;
+  font-family: 'Noto Sans', Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+}
+.ears {
+  display: none;
+}
+
+/* headings */
+#title, h1, h2, h3, h4, h5, h6 {
+  margin: 1em 0 0.5em;
+  font-weight: bold;
+  line-height: 1.3;
+}
+#title {
+  clear: both;
+  border-bottom: 1px solid #ddd;
+  margin: 0 0 0.5em 0;
+  padding: 1em 0 0.5em;
+}
+.author {
+  padding-bottom: 4px;
+}
+h1 {
+  font-size: 26px;
+  margin: 1em 0;
+}
+h2 {
+  font-size: 22px;
+  margin-top: -20px;  /* provide offset for in-page anchors */
+  padding-top: 33px;
+}
+h3 {
+  font-size: 18px;
+  margin-top: -36px;  /* provide offset for in-page anchors */
+  padding-top: 42px;
+}
+h4 {
+  font-size: 16px;
+  margin-top: -36px;  /* provide offset for in-page anchors */
+  padding-top: 42px;
+}
+h5, h6 {
+  font-size: 14px;
+}
+#n-copyright-notice {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+}
+/* general structure */
+p {
+  padding: 0;
+  margin: 0 0 1em 0;
+  text-align: left;
+}
+div, span {
+  position: relative;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 1em 1em 0;
+  margin-bottom: 1.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+.alignCenter.art-text {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 1em 1em 0;
+  margin-bottom: 1.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 1em 2em;
+}
+ol ol, ul ul, ol ul, ul ol {
+  margin-left: 1em;
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+.ulCompact li {
+  margin: 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+}
+ul.empty li, .ulEmpty li {
+  margin-top: 0.5em;
+}
+ul.compact, .ulCompact,
+ol.compact, .olCompact {
+  line-height: 100%;
+  margin: 0 0 0 2em;
+}
+
+/* definition lists */
+dl {
+}
+dl > dt {
+  float: left;
+  margin-right: 1em;
+}
+/* 
+dl.nohang > dt {
+  float: none;
+}
+*/
+dl > dd {
+  margin-bottom: .8em;
+  min-height: 1.3em;
+}
+dl.compact > dd, .dlCompact > dd {
+  margin-bottom: 0em;
+}
+dl > dd > dl {
+  margin-top: 0.5em;
+  margin-bottom: 0em;
+}
+
+/* links */
+a {
+  text-decoration: none;
+}
+a[href] {
+  color: #22e; /* Arlen: WCAG 2019 */
+}
+a[href]:hover {
+  background-color: #f2f2f2;
+}
+figcaption a[href],
+a[href].selfRef {
+  color: #222;
+}
+/* XXX probably not this:
+a.selfRef:hover {
+  background-color: transparent;
+  cursor: default;
+} */
+
+/* Figures */
+tt, code, pre, code {
+  background-color: #f9f9f9;
+  font-family: 'Roboto Mono', monospace;
+}
+pre {
+  border: 1px solid #eee;
+  margin: 0;
+  padding: 1em;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption {
+  font-style: italic;
+  margin: 0 0 1em 0;
+}
+@media screen {
+  pre {
+    overflow-x: auto;
+    max-width: 100%;
+    max-width: calc(100% - 22px);
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 1.2em 2em;
+}
+blockquote {
+  background-color: #f9f9f9;
+  color: #111; /* Arlen: WCAG 2019 */
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  margin: 1em 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  border: 1px solid #eee;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5em 0.75em;
+}
+th {
+  text-align: left;
+  background-color: #e9e9e9;
+}
+tr:nth-child(2n+1) > td {
+  background-color: #f5f5f5;
+}
+table caption {
+  font-style: italic;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+table p {
+  /* XXX to avoid bottom margin on table row signifiers. If paragraphs should
+     be allowed within tables more generally, it would be far better to select on a class. */
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  color: #666; /* Arlen: AHDJ 2019 */
+  text-decoration: none;
+  visibility: hidden;
+  user-select: none;
+  -ms-user-select: none;
+  -o-user-select:none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+@media screen {
+  aside:hover > a.pilcrow,
+  p:hover > a.pilcrow,
+  blockquote:hover > a.pilcrow,
+  div:hover > a.pilcrow,
+  li:hover > a.pilcrow,
+  pre:hover > a.pilcrow {
+    visibility: visible;
+  }
+  a.pilcrow:hover {
+    background-color: transparent;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+}
+.bcp14 {
+  font-variant: small-caps;
+}
+
+.role {
+  font-variant: all-small-caps;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: 0.9em;
+}
+#identifiers dt {
+  width: 3em;
+  clear: left;
+}
+#identifiers dd {
+  float: left;
+  margin-bottom: 0;
+}
+#identifiers .authors .author {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+#identifiers .authors .org {
+  font-style: italic;
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #666; /* Arlen: WCAG 2019 */
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: left;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc  {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+}
+nav.toc ul {
+  margin: 0 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+}
+nav.toc li {
+  line-height: 1.3em;
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+  text-indent: -1.2em;
+}
+/* references */
+.references dt {
+  text-align: right;
+  font-weight: bold;
+  min-width: 7em;
+}
+.references dd {
+  margin-left: 8em;
+  overflow: auto;
+}
+
+.refInstance {
+  margin-bottom: 1.25em;
+}
+
+.references .ascii {
+  margin-bottom: 0.25em;
+}
+
+/* index */
+.index ul {
+  margin: 0 0 0 1em;
+  padding: 0;
+  list-style: none;
+}
+.index ul ul {
+  margin: 0;
+}
+.index li {
+  margin: 0;
+  text-indent: -2em;
+  padding-left: 2em;
+  padding-bottom: 5px;
+}
+.indexIndex {
+  margin: 0.5em 0 1em;
+}
+.index a {
+  font-weight: 700;
+}
+/* make the index two-column on all but the smallest screens */
+@media (min-width: 600px) {
+  .index ul {
+    -moz-column-count: 2;
+    -moz-column-gap: 20px;
+  }
+  .index ul ul {
+    -moz-column-count: 1;
+    -moz-column-gap: 0;
+  }
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  margin: 1em 0;
+}
+
+address.vcard .nameRole {
+  font-weight: 700;
+  margin-left: 0;
+}
+address.vcard .label {
+  font-family: "Noto Sans",Arial,Helvetica,sans-serif;
+  margin: 0.5em 0;
+}
+address.vcard .type {
+  display: none;
+}
+.alternative-contact {
+  margin: 1.5em 0 1em;
+}
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+
+/* temporary notes */
+.rfcEditorRemove::before {
+  position: absolute;
+  top: 0.2em;
+  right: 0.2em;
+  padding: 0.2em;
+  content: "The RFC Editor will remove this note";
+  color: #9e2a00; /* Arlen: WCAG 2019 */
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+}
+.rfcEditorRemove {
+  position: relative;
+  padding-top: 1.8em;
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+  border-radius: 3px;
+}
+.cref {
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+/* alternative layout for smaller screens */
+@media screen and (max-width: 1023px) {
+  body {
+    padding-top: 2em;
+  }
+  #title {
+    padding: 1em 0;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  h2 {
+    font-size: 20px;
+    margin-top: -18px;  /* provide offset for in-page anchors */
+    padding-top: 38px;
+  }
+  #identifiers dd {
+    max-width: 60%;
+  }
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    background-color: inherit;
+    border-bottom: 1px solid #ccc;
+  }
+  #toc h2 {
+    margin: -1px 0 0 0;
+    padding: 4px 0 4px 6px;
+    padding-right: 1em;
+    min-width: 190px;
+    font-size: 1.1em;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+  }
+  #toc h2::before { /* css hamburger */
+    float: right;
+    position: relative;
+    width: 1em;
+    height: 1px;
+    left: -164px;
+    margin: 6px 0 0 0;
+    background: white none repeat scroll 0 0;
+    box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+    content: "";
+  }
+  #toc nav {
+    display: none;
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+}
+
+/* alternative layout for wide screens */
+@media screen and (min-width: 1024px) {
+  body {
+    max-width: 724px;
+    margin: 42px auto;
+    padding-left: 1.5em;
+    padding-right: 29em;
+  }
+  #toc {
+    position: fixed;
+    top: 42px;
+    right: 42px;
+    width: 25%;
+    margin: 0;
+    padding: 0 1em;
+    z-index: 1;
+  }
+  #toc h2 {
+    border-top: none;
+    border-bottom: 1px solid #ddd;
+    font-size: 1em;
+    font-weight: normal;
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 0;
+    overflow: auto;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre {
+    page-break-inside: avoid;
+  }
+  figure {
+    overflow: scroll;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  h2+*, h3+*, h4+*, h5+*, h6+* {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+/* This is commented out here, as the string-set: doesn't
+   pass W3C validation currently */
+/*
+.ears thead .left {
+  string-set: ears-top-left content();
+}
+
+.ears thead .center {
+  string-set: ears-top-center content();
+}
+
+.ears thead .right {
+  string-set: ears-top-right content();
+}
+
+.ears tfoot .left {
+  string-set: ears-bottom-left content();
+}
+
+.ears tfoot .center {
+  string-set: ears-bottom-center content();
+}
+
+.ears tfoot .right {
+  string-set: ears-bottom-right content();
+}
+*/
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+  /* The follwing is commented out here, but set appropriately by in code, as
+     the content depends on the document */
+  /*
+  @top-left {
+    content: 'Internet-Draft';
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-left {
+    content: string(ears-top-left);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-center {
+    content: string(ears-top-center);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-right {
+    content: string(ears-top-right);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @bottom-left {
+    content: string(ears-bottom-left);
+    vertical-align: top;
+    border-top: solid 1px #ccc;
+  }
+  @bottom-center {
+    content: string(ears-bottom-center);
+    vertical-align: top;
+    border-top: solid 1px #ccc;
+  }
+  @bottom-right {
+      content: '[Page ' counter(page) ']';
+      vertical-align: top;
+      border-top: solid 1px #ccc;
+  }
+  */
+
+}
+
+/* Changes introduced to fix issues found during implementation */
+/* Make sure links are clickable even if overlapped by following H* */
+a {
+  z-index: 2;
+}
+/* Separate body from document info even without intervening H1 */
+section {
+  clear: both;
+}
+
+
+/* Top align author divs, to avoid names without organization dropping level with org names */
+.author {
+  vertical-align: top;
+}
+
+/* Leave room in document info to show Internet-Draft on one line */
+#identifiers dt {
+  width: 8em;
+}
+
+/* Don't waste quite as much whitespace between label and value in doc info */
+#identifiers dd {
+  margin-left: 1em;
+}
+
+/* Give floating toc a background color (needed when it's a div inside section */
+#toc {
+  background-color: white;
+}
+
+/* Make the collapsed ToC header render white on gray also when it's a link */
+@media screen and (max-width: 1023px) {
+  #toc h2 a,
+  #toc h2 a:link,
+  #toc h2 a:focus,
+  #toc h2 a:hover,
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+}
+
+/* Give the bottom of the ToC some whitespace */
+@media screen and (min-width: 1024px) {
+  #toc {
+    padding: 0 0 1em 1em;
+  }
+}
+
+/* Style section numbers with more space between number and title */
+.section-number {
+  padding-right: 0.5em;
+}
+
+/* prevent monospace from becoming overly large */
+tt, code, pre, code {
+  font-size: 95%;
+}
+
+/* Fix the height/width aspect for ascii art*/
+pre.sourcecode,
+.art-text pre {
+  line-height: 1.12;
+}
+
+
+/* Add styling for a link in the ToC that points to the top of the document */
+a.toplink {
+  float: right;
+  margin-right: 0.5em;
+}
+
+/* Fix the dl styling to match the RFC 7992 attributes */
+dl > dt,
+dl.dlParallel > dt {
+  float: left;
+  margin-right: 1em;
+}
+dl.dlNewline > dt {
+  float: none;
+}
+
+/* Provide styling for table cell text alignment */
+table td.text-left,
+table th.text-left {
+  text-align: left;
+}
+table td.text-center,
+table th.text-center {
+  text-align: center;
+}
+table td.text-right,
+table th.text-right {
+  text-align: right;
+}
+
+/* Make the alternative author contact informatio look less like just another
+   author, and group it closer with the primary author contact information */
+.alternative-contact {
+  margin: 0.5em 0 0.25em 0;
+}
+address .non-ascii {
+  margin: 0 0 0 2em;
+}
+
+/* With it being possible to set tables with alignment
+  left, center, and right, { width: 100%; } does not make sense */
+table {
+  width: auto;
+}
+
+/* Avoid reference text that sits in a block with very wide left margin,
+   because of a long floating dt label.*/
+.references dd {
+  overflow: visible;
+}
+
+/* Control caption placement */
+caption {
+  caption-side: bottom;
+}
+
+/* Limit the width of the author address vcard, so names in right-to-left
+   script don't end up on the other side of the page. */
+
+address.vcard {
+  max-width: 30em;
+  margin-right: auto;
+}
+
+/* For address alignment dependent on LTR or RTL scripts */
+address div.left {
+  text-align: left;
+}
+address div.right {
+  text-align: right;
+}
+
+/* Provide table alignment support.  We can't use the alignX classes above
+   since they do unwanted things with caption and other styling. */
+table.right {
+ margin-left: auto;
+ margin-right: 0;
+}
+table.center {
+ margin-left: auto;
+ margin-right: auto;
+}
+table.left {
+ margin-left: 0;
+ margin-right: auto;
+}
+
+/* Give the table caption label the same styling as the figcaption */
+caption a[href] {
+  color: #222;
+}
+
+@media print {
+  .toplink {
+    display: none;
+  }
+
+  /* avoid overwriting the top border line with the ToC header */
+  #toc {
+    padding-top: 1px;
+  }
+
+  /* Avoid page breaks inside dl and author address entries */
+  .vcard {
+    page-break-inside: avoid;
+  }
+
+}
+/* Avoid wrapping of URLs in references */
+@media screen {
+  .references a {
+    white-space: nowrap;
+  }
+}
+/* Tweak the bcp14 keyword presentation */
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+/* Tweak the invisible space above H* in order not to overlay links in text above */
+ h2 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 31px;
+ }
+ h3 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 24px;
+ }
+ h4 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 24px;
+ }
+/* Float artwork pilcrow to the right */
+@media screen {
+  .artwork a.pilcrow {
+    display: block;
+    line-height: 0.7;
+    margin-top: 0.15em;
+  }
+}
+/* Make pilcrows on dd visible */
+@media screen {
+  dd:hover > a.pilcrow {
+    visibility: visible;
+  }
+}
+/* Make the placement of figcaption match that of a table's caption
+   by removing the figure's added bottom margin */
+.alignLeft.art-text,
+.alignCenter.art-text,
+.alignRight.art-text {
+   margin-bottom: 0;
+}
+.alignLeft,
+.alignCenter,
+.alignRight {
+  margin: 1em 0 0 0;
+}
+/* In print, the pilcrow won't show on hover, so prevent it from taking up space,
+   possibly even requiring a new line */
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+/* Styling for the external metadata */
+div#external-metadata {
+  background-color: #eee;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  display: none;
+}
+div#internal-metadata {
+  padding: 0.5em;                       /* to match the external-metadata padding */
+}
+/* Styling for title RFC Number */
+h1#rfcnum {
+  clear: both;
+  margin: 0 0 -1em;
+  padding: 1em 0 0 0;
+}
+/* Make .olPercent look the same as <ol><li> */
+dl.olPercent > dd {
+  margin: 0 0 0.25em 0;
+  min-height: initial;
+}
+/* Give aside some styling to set it apart */
+aside {
+  border-left: 1px solid #ddd;
+  margin: 1em 0 1em 2em;
+  padding: 0.2em 2em;
+}
+aside > dl,
+aside > ol,
+aside > ul,
+aside > table,
+aside > p {
+  margin-bottom: 0.5em;
+}
+/* Additional page break settings */
+@media print {
+  figcaption, table caption {
+    page-break-before: avoid;
+  }
+}
+/* Font size adjustments for print */
+@media print {
+  body  { font-size: 10pt;      line-height: normal; max-width: 96%; }
+  h1    { font-size: 1.72em;    padding-top: 1.5em; } /* 1*1.2*1.2*1.2 */
+  h2    { font-size: 1.44em;    padding-top: 1.5em; } /* 1*1.2*1.2 */
+  h3    { font-size: 1.2em;     padding-top: 1.5em; } /* 1*1.2 */
+  h4    { font-size: 1em;       padding-top: 1.5em; }
+  h5, h6 { font-size: 1em;      margin: initial; padding: 0.5em 0 0.3em; }
+}
+/* Sourcecode margin in print, when there's no pilcrow */
+@media print {
+  .artwork,
+  .sourcecode {
+    margin-bottom: 1em;
+  }
+}
+/*
+  The margin-left: 0 on <dd> removes all distinction
+  between levels from nested <dl>s.  Undo that.
+*/
+dl.olPercent > dd,
+dd {
+  margin-left: revert;
+}
+/* Avoid narrow tables forcing too narrow table captions, which may render badly */
+table {
+  min-width: 20em;
+}
+/* ol type a */
+ol.type-a { list-style-type: lower-alpha; }
+ol.type-A { list-style-type: upper-alpha; }
+ol.type-i { list-style-type: lower-roman; }
+ol.type-I { list-style-type: lower-roman; }
+</style>
+</head>
+<body>
+<script src="metadata.min.js"></script>
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">RFT</td>
+<td class="right">June 2022</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Maslew, et al.</td>
+<td class="center">Expires 24 December 2022</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">Group I &amp; Group VII</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-group18-rft-02</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2022-06-22" class="published">22 June 2022</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Informational</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2022-12-24">24 December 2022</time></dd>
+<dt class="label-authors">Authors:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">A. Maslew</div>
+</div>
+<div class="author">
+      <div class="author-name">F. Schoenberger</div>
+</div>
+<div class="author">
+      <div class="author-name">J. Kusnierz</div>
+</div>
+<div class="author">
+      <div class="author-name">E. Berretta</div>
+</div>
+<div class="author">
+      <div class="author-name">A. Swierkowska</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">Robust File Transfer</h1>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo-2">
+<a href="#name-status-of-this-memo-2" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 24 December 2022.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice-2">
+<a href="#name-copyright-notice-2" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2022 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Simplified BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Simplified BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents-2">
+<a href="#name-table-of-contents-2" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction-2" class="xref">Introduction</a><a href="#section-toc.1-1.1.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-terms-and-definitions-2" class="xref">Terms and Definitions</a><a href="#section-toc.1-1.1.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.1.2.2">
+                <p id="section-toc.1-1.1.2.2.1"><a href="#section-1.2" class="xref">1.2</a>.  <a href="#name-notation-2" class="xref">Notation</a><a href="#section-toc.1-1.1.2.2.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="xref">2</a>.  <a href="#name-streams-2" class="xref">Streams</a><a href="#section-toc.1-1.2.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1"><a href="#section-2.1" class="xref">2.1</a>.  <a href="#name-establishing-a-stream-2" class="xref">Establishing a stream</a><a href="#section-toc.1-1.2.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.2">
+                <p id="section-toc.1-1.2.2.2.1"><a href="#section-2.2" class="xref">2.2</a>.  <a href="#name-message-sending-2" class="xref">Message sending</a><a href="#section-toc.1-1.2.2.2.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.3">
+                <p id="section-toc.1-1.2.2.3.1"><a href="#section-2.3" class="xref">2.3</a>.  <a href="#name-sending-data-2" class="xref">Sending data</a><a href="#section-toc.1-1.2.2.3.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.3.2.1">
+                    <p id="section-toc.1-1.2.2.3.2.1.1"><a href="#section-2.3.1" class="xref">2.3.1</a>.  <a href="#name-file-listing-2" class="xref">File listing</a><a href="#section-toc.1-1.2.2.3.2.1.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.4">
+                <p id="section-toc.1-1.2.2.4.1"><a href="#section-2.4" class="xref">2.4</a>.  <a href="#name-closing-a-stream-2" class="xref">Closing a stream</a><a href="#section-toc.1-1.2.2.4.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.5">
+                <p id="section-toc.1-1.2.2.5.1"><a href="#section-2.5" class="xref">2.5</a>.  <a href="#name-stream-migration-2" class="xref">Stream Migration</a><a href="#section-toc.1-1.2.2.5.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.6">
+                <p id="section-toc.1-1.2.2.6.1"><a href="#section-2.6" class="xref">2.6</a>.  <a href="#name-flow-control-2" class="xref">Flow control</a><a href="#section-toc.1-1.2.2.6.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2.2.7">
+                <p id="section-toc.1-1.2.2.7.1"><a href="#section-2.7" class="xref">2.7</a>.  <a href="#name-congestion-control-2" class="xref">Congestion control</a><a href="#section-toc.1-1.2.2.7.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-message-formats-2" class="xref">Message Formats</a><a href="#section-toc.1-1.3.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="xref">3.1</a>.  <a href="#name-control-messages-2" class="xref">Control Messages</a><a href="#section-toc.1-1.3.2.1.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1.2.1">
+                    <p id="section-toc.1-1.3.2.1.2.1.1"><a href="#section-3.1.1" class="xref">3.1.1</a>.  <a href="#name-client_hello-2" class="xref">CLIENT_HELLO</a><a href="#section-toc.1-1.3.2.1.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1.2.2">
+                    <p id="section-toc.1-1.3.2.1.2.2.1"><a href="#section-3.1.2" class="xref">3.1.2</a>.  <a href="#name-server_hello-2" class="xref">SERVER_HELLO</a><a href="#section-toc.1-1.3.2.1.2.2.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1.2.3">
+                    <p id="section-toc.1-1.3.2.1.2.3.1"><a href="#section-3.1.3" class="xref">3.1.3</a>.  <a href="#name-ack-2" class="xref">ACK</a><a href="#section-toc.1-1.3.2.1.2.3.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1.2.4">
+                    <p id="section-toc.1-1.3.2.1.2.4.1"><a href="#section-3.1.4" class="xref">3.1.4</a>.  <a href="#name-fin-2" class="xref">FIN</a><a href="#section-toc.1-1.3.2.1.2.4.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1.2.5">
+                    <p id="section-toc.1-1.3.2.1.2.5.1"><a href="#section-3.1.5" class="xref">3.1.5</a>.  <a href="#name-connection_moved-2" class="xref">CONNECTION_MOVED</a><a href="#section-toc.1-1.3.2.1.2.5.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1.2.6">
+                    <p id="section-toc.1-1.3.2.1.2.6.1"><a href="#section-3.1.6" class="xref">3.1.6</a>.  <a href="#name-error-2" class="xref">ERROR</a><a href="#section-toc.1-1.3.2.1.2.6.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="xref">3.2</a>.  <a href="#name-chunk-messages-2" class="xref">Chunk Messages</a><a href="#section-toc.1-1.3.2.2.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-future-work-2" class="xref">Future Work</a><a href="#section-toc.1-1.4.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="xref">4.1</a>.  <a href="#name-allowing-a-variable-size-chu" class="xref">Allowing a variable size chunk message</a><a href="#section-toc.1-1.4.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="xref">4.2</a>.  <a href="#name-hash-algorithm-negotiation-2" class="xref">Hash algorithm negotiation</a><a href="#section-toc.1-1.4.2.2.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-normative-references-2" class="xref">Normative References</a><a href="#section-toc.1-1.5.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-informative-references-2" class="xref">Informative References</a><a href="#section-toc.1-1.6.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-appendix.a" class="xref"></a><a href="#name-authors-addresses-2" class="xref">Authors' Addresses</a><a href="#section-toc.1-1.7.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction-2">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction-2" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">Robust File Transfer (RFT) is a file-transfer protocol on top of UDP <span>[<a href="#RFC0768" class="xref">RFC0768</a>]</span>. This document defines version 0.2 of RFT. In spirit it is very similar to QUIC <span>[<a href="#RFC9000" class="xref">RFC9000</a>]</span>, albeit arguably a bit easier.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">RFT is connection-oriented and stateful. A RFT <em>stream</em> is a unidirectional ordered sequences of byte between a <em>client</em> and a <em>server</em>. Streams support IP address migration, flow control and congestion control. The protocol guarantees in-order delivery for all messages belonging to a stream. There is no such guarantee for messages belonging to different streams.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">RFT <em>messages</em> are either <em>chunk messages</em>, containing file data, or <em>control messages</em>. Control messages are used to request and signal state changes on either the server or the client. There's a 1:1 correspondence between a RFT message and a UDP datagram.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">RFT employs flow and congestion control on a per-stream basis.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<div id="terms-and-definitions">
+<section id="section-1.1">
+        <h3 id="name-terms-and-definitions-2">
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-terms-and-definitions-2" class="section-name selfRef">Terms and Definitions</a>
+        </h3>
+<p id="section-1.1-1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP14 <span>[<a href="#RFC2119" class="xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="xref">RFC8174</a>]</span> when, and only when, they appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">Commonly used terms in this document:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<dl class="dlParallel dlCompact" id="section-1.1-3">
+          <dt id="section-1.1-3.1">Client:</dt>
+<dd id="section-1.1-3.2">An endpoint that participates in a stream and wants to receive a file.<a href="#section-1.1-3.2" class="pilcrow">¶</a>
+</dd>
+<dt id="section-1.1-3.3">Server:</dt>
+<dd id="section-1.1-3.4">An endpoint that participates in a stream and wants to send a file.<a href="#section-1.1-3.4" class="pilcrow">¶</a>
+</dd>
+<dt id="section-1.1-3.5">Stream:</dt>
+<dd id="section-1.1-3.6">An ordered unidirectional (Client to Server) sequence of bytes. It is guaranteed that each byte will arrive and that it will arrive in exactly the same order it was sent out.<a href="#section-1.1-3.6" class="pilcrow">¶</a>
+</dd>
+</dl>
+</section>
+</div>
+<div id="notation">
+<section id="section-1.2">
+        <h3 id="name-notation-2">
+<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-notation-2" class="section-name selfRef">Notation</a>
+        </h3>
+<p id="section-1.2-1">We define <code>U8</code>, <code>U16</code>, <code>U32</code>, <code>U64</code> and <code>U128</code>, <code>U256</code> as unsigned 8-, 16-, 32-, 64-, 128-, or 256-bit integers. <code>I8</code>, <code>I16</code>, <code>I32</code>, <code>I64</code>, <code>I128</code>, and <code>I256</code> are signed 8-, 16-, 32-, 64-, 128-, or 256-bit integers. A <code>string</code> is a UTF-8 <span>[<a href="#RFC3629" class="xref">RFC3629</a>]</span> encoded zero-terminated string. The syntax <code>DataType[]</code> defines a variable-length array of DataType; <code>DataType[N]</code> a fixed size array with <code>N</code> elements of type <code>DataType</code>.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
+<p id="section-1.2-2">Messages are represented in a C-style way (see <a href="#exampleMessage" class="xref">Figure 1</a>). They may be annotated by C-style comments. All members are laid out continuously on wire, any padding will be made explicit. If a field has a constant value we write it in the form of an assignment. We use the prefix <code>0x</code> to denote hexadecimal values.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
+<span id="name-example-message-2"></span><div id="exampleMessage">
+<figure id="figure-1">
+          <div class="artwork art-text alignLeft" id="section-1.2-3.1">
+<pre>ExampleMessage {
+    U8 firstMember = 42,
+    I8 secondMember = 0x01, // A hexadecimal value
+    U16 padding0,
+    string thirdMember,
+    I32[16] array
+}
+</pre>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-example-message-2" class="selfRef">Example Message</a>
+          </figcaption></figure>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="streams">
+<section id="section-2">
+      <h2 id="name-streams-2">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-streams-2" class="section-name selfRef">Streams</a>
+      </h2>
+<p id="section-2-1">The protocol is based on streams. Streams are ordered sequences of bytes. RFT guarantees that all messages in a stream will arrive in-order (or will be retransmitted). There is not happened-before relation between different messages in different streams. A stream represents exactly one filepath on the server.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">A stream can be established between a client and a server. A stream is identified by a <strong>Stream ID</strong>, a unique U16 value greater than 0. A stream ID is chosen by the server. A server <span class="bcp14">MAY</span> choose its stream IDs however it sees fit. Each stream contains the following state:<a href="#section-2-2" class="pilcrow">¶</a></p>
+<ul>
+<li id="section-2-3.1">
+          <strong>Encryption</strong>. Right now, we don't support any form of encryption.<a href="#section-2-3.1" class="pilcrow">¶</a>
+</li>
+<li id="section-2-3.2">
+          <strong>Compression</strong>. Right now, we don't support any kind of compression.<a href="#section-2-3.2" class="pilcrow">¶</a>
+</li>
+<li id="section-2-3.3">
+          <strong>Flow control</strong>. We support flow control with a sliding window. See <a href="#FlowControl" class="xref">Section 2.6</a> for details.<a href="#section-2-3.3" class="pilcrow">¶</a>
+</li>
+<li id="section-2-3.4">
+          <strong>Congestion control</strong>. We support congestion control with an algorithm similar to TCP Reno. See <a href="#CongestionControl" class="xref">Section 2.7</a> for details.<a href="#section-2-3.4" class="pilcrow">¶</a>
+</li>
+<li id="section-2-3.5">
+          <strong>Connection migration</strong>. We support migrating a stream. See <a href="#StreamMigration" class="xref">Section 2.5</a>.<a href="#section-2-3.5" class="pilcrow">¶</a>
+</li>
+</ul>
+<div id="establishing-a-stream">
+<section id="section-2.1">
+        <h3 id="name-establishing-a-stream-2">
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-establishing-a-stream-2" class="section-name selfRef">Establishing a stream</a>
+        </h3>
+<p id="section-2.1-1">A stream is established by a three way handshake:<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<span id="name-3-way-handshake-of-rft-2"></span><figure id="figure-2">
+          <div class="artwork art-text alignLeft" id="section-2.1-2.1">
+<pre>
+             +----------------------+
+    +-------&gt;|       Initial        |
+    |        +----------+-----------+
+    |                   |
+Error or                | CLIENT_HELLO
+Timeout                 |
+    |                   v
+    |        +----------------------+
+    +--------| Parse Client Request |
+    |        +----------+-----------+
+    |                   |
+    |                   | SERVER_HELLO
+    |                   |
+    |                   v
+    |        +----------------------+
+    +--------| Parse Server Request |
+             +----------+-----------+
+                        |
+                        | ACK
+                        |
+                        v
+             +----------------------+
+             |      Established     |
+             +----------------------+
+
+</pre>
+</div>
+<figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
+<a href="#name-3-way-handshake-of-rft-2" class="selfRef">3-way handshake of RFT</a>
+          </figcaption></figure>
+<ol start="1" type="1" class="normal type-1" id="section-2.1-3">
+          <li id="section-2.1-3.1">
+            <p id="section-2.1-3.1.1">The client sends a CLIENT_HELLO (<a href="#ClientHello" class="xref">Section 3.1.1</a>) message. The request <span class="bcp14">MUST</span> be filled with an appropriately sized <code>WindowInMessages</code>. To allow for the resumption of previous transmissions the client <span class="bcp14">MAY</span> choose an offset (in the chunk's payload size) of the file.<a href="#section-2.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+<li id="section-2.1-3.2">
+            <p id="section-2.1-3.2.1">The server parses the CLIENT_HELLO message and tries to process the additional headers. Right now, none are defined, so they <span class="bcp14">MUST</span> be set to 0.<a href="#section-2.1-3.2.1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="compact type-1" id="section-2.1-3.2.2">
+              <li id="section-2.1-3.2.2.1">In case of success, the server responds with a SERVER_HELLO (<a href="#ServerHello" class="xref">Section 3.1.2</a>) message. It assigns a unique stream ID. The request <span class="bcp14">MUST</span> be filled with an appropriately sized <code>WindowInMessages</code> and the stream ID.<a href="#section-2.1-3.2.2.1" class="pilcrow">¶</a>
+</li>
+<li id="section-2.1-3.2.2.2">In case of an error the server responds with an appropriate ERROR (<a href="#Error" class="xref">Section 3.1.6</a>) message. The server <span class="bcp14">MAY</span> pose arbitrary constraints. For example, it may not allow two streams to be created for the same file.<a href="#section-2.1-3.2.2.2" class="pilcrow">¶</a>
+</li>
+</ol>
+</li>
+<li id="section-2.1-3.3">
+            <p id="section-2.1-3.3.1">The client waits at most 5 seconds for the SERVER_HELLO message. If it was not received, it <span class="bcp14">MUST</span> retry to establish the stream (i.e., start at step 1). Any messages that are received later <span class="bcp14">SHALL</span> be discarded.<a href="#section-2.1-3.3.1" class="pilcrow">¶</a></p>
+<p id="section-2.1-3.3.2">The client parses the SERVER_HELLO message and tries to process the additional headers. Right now, none are defined, so they <span class="bcp14">MUST</span> be set to 0.<a href="#section-2.1-3.3.2" class="pilcrow">¶</a></p>
+</li>
+<li id="section-2.1-3.4">
+            <p id="section-2.1-3.4.1">If the client accepts the headers it sends an ACK (<a href="#ACK" class="xref">Section 3.1.3</a>) message to the server. The <code>SequenceNumber</code> <span class="bcp14">MUST</span> be set to 0. This concludes the stream establishing process.<a href="#section-2.1-3.4.1" class="pilcrow">¶</a></p>
+</li>
+</ol>
+</section>
+</div>
+<div id="ErrorHandling">
+<section id="section-2.2">
+        <h3 id="name-message-sending-2">
+<a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-message-sending-2" class="section-name selfRef">Message sending</a>
+        </h3>
+<p id="section-2.2-1">Both endpoints must validate all messages (e.g. by using the checksums). All valid messages in a stream except for ACKs themselves <span class="bcp14">MUST</span> be acknowledged using an ACK message. Each partner in a stream keeps track of the number of bytes the other side has sent. Both sides start out with a <code>SequenceNumber</code> of 0 after the initial handshake. Multiple messages <span class="bcp14">MAY</span> be acknowledged in one message (i.e., cumulative ACKs). ACKs <span class="bcp14">MUST</span> always contain sequence numbers that correspond to whole messages.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
+<p id="section-2.2-2">For each message, the <code>SequenceNumber</code> is increased by the size of the message in bytes (e.g., what you would get for the expression <code>sizeof(message)</code>). In other words: The sequence number of a message is the starting position (in bytes) of this particular message in the stream.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
+<p id="section-2.2-3">If a message arrives with a <code>SequenceNumber</code> larger than the one expected, the receiver <span class="bcp14">MUST</span> discard it and send an ACK with the last valid sequence number.<a href="#section-2.2-3" class="pilcrow">¶</a></p>
+<p id="section-2.2-4">If the sender doesn't receive an ACK within 5 seconds of sending the message, the message is considered lost and <span class="bcp14">MUST</span> be retransmitted.<a href="#section-2.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sending-data">
+<section id="section-2.3">
+        <h3 id="name-sending-data-2">
+<a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-sending-data-2" class="section-name selfRef">Sending data</a>
+        </h3>
+<p id="section-2.3-1">After the handshake completes, the server <span class="bcp14">MUST</span> start sending the required file chunks (<a href="#Chunk" class="xref">Section 3.2</a>). A chunk of a file is 997 bytes. The server <span class="bcp14">MUST</span> respect the client's requested offset from the stream 3-way handshake. If less than 997 bytes of the file remain, the server <span class="bcp14">MUST</span> fill the rest of the message with 0x00. A client <span class="bcp14">MUST</span> ignore this padding.<a href="#section-2.3-1" class="pilcrow">¶</a></p>
+<div id="file-listing">
+<section id="section-2.3.1">
+          <h4 id="name-file-listing-2">
+<a href="#section-2.3.1" class="section-number selfRef">2.3.1. </a><a href="#name-file-listing-2" class="section-name selfRef">File listing</a>
+          </h4>
+<p id="section-2.3.1-1">A special case is the file with a path of "" (the empty string). In this case the server <span class="bcp14">MUST</span> produce a file listing, that prints the path to all available files separated by <code>\r\n</code>. Even though this file is purely virtual, the exact same mechanisms apply.<a href="#section-2.3.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="closing-a-stream">
+<section id="section-2.4">
+        <h3 id="name-closing-a-stream-2">
+<a href="#section-2.4" class="section-number selfRef">2.4. </a><a href="#name-closing-a-stream-2" class="section-name selfRef">Closing a stream</a>
+        </h3>
+<p id="section-2.4-1">A stream can be closed at any time by either the client or the server. This can be done by sending a FIN (<a href="#FIN" class="xref">Section 3.1.4</a>) message. The other endpoint <span class="bcp14">MUST</span> ACK the message before resources can be freed. Upon reception all messages still in-flight <span class="bcp14">MAY</span> be discarded by both client and server. A client <span class="bcp14">MAY</span> choose to process outstanding CHUNK messages, though.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="StreamMigration">
+<section id="section-2.5">
+        <h3 id="name-stream-migration-2">
+<a href="#section-2.5" class="section-number selfRef">2.5. </a><a href="#name-stream-migration-2" class="section-name selfRef">Stream Migration</a>
+        </h3>
+<p id="section-2.5-1">Streams are identified by a stream ID. If the IP address of either the client or the server changes they <span class="bcp14">MUST</span> inform the other party with a CONNECTION_MOVED (<a href="#ConnectionMoved" class="xref">Section 3.1.5</a>) message. The receiver <span class="bcp14">MUST</span> use the information from the lower layers to change its state and send all further messages to the new address.<a href="#section-2.5-1" class="pilcrow">¶</a></p>
+<p id="section-2.5-2">Any messages already in-flight <span class="bcp14">MAY</span> be processed by both the server and the client. If either opts not to receive them, normal error handling (<a href="#ErrorHandling" class="xref">Section 2.2</a>) applies.<a href="#section-2.5-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="FlowControl">
+<section id="section-2.6">
+        <h3 id="name-flow-control-2">
+<a href="#section-2.6" class="section-number selfRef">2.6. </a><a href="#name-flow-control-2" class="section-name selfRef">Flow control</a>
+        </h3>
+<p id="section-2.6-1">Each ACK message (<a href="#ACK" class="xref">Section 3.1.3</a>) contains <code>WindowInMessages</code>, the amount of messages a client may receive at any time. A server <span class="bcp14">MUST</span> take care to never exceed this limit. If the window remains zero for five consecutive messages the sender <span class="bcp14">MUST</span> assume the receiver has failed and terminate the stream.<a href="#section-2.6-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="CongestionControl">
+<section id="section-2.7">
+        <h3 id="name-congestion-control-2">
+<a href="#section-2.7" class="section-number selfRef">2.7. </a><a href="#name-congestion-control-2" class="section-name selfRef">Congestion control</a>
+        </h3>
+<p id="section-2.7-1">Congestion control is done with an algorithm similar to TCP's congestion control <span>[<a href="#RFC5681" class="xref">RFC5681</a>]</span>.<a href="#section-2.7-1" class="pilcrow">¶</a></p>
+<p id="section-2.7-2">The amount of messages in-flight is limited by a congestion window <code>cwnd</code>. The following rules <span class="bcp14">SHALL</span> apply to determine the size of the window.<a href="#section-2.7-2" class="pilcrow">¶</a></p>
+<dl class="dlParallel" id="section-2.7-3">
+          <dt id="section-2.7-3.1">Slow Start:</dt>
+<dd id="section-2.7-3.2">
+            <code>cwnd</code> is set to 1. For each received ACK or SERVER_HELLO message the window should be determined as <code>cwndNew = min(cwndOld * 2, receiverWindow)</code>. This phase stops when the slow start threshold is reached.<a href="#section-2.7-3.2" class="pilcrow">¶</a>
+</dd>
+<dt id="section-2.7-3.3">Congestion Avoidance:</dt>
+<dd id="section-2.7-3.4">
+            <p id="section-2.7-3.4.1">Once slow start has stopped, we reach this phase. Here we increase our <code>cwnd</code> by 1 if all messages in this window have been acknowledged. Our <code>cwnd</code> still may not grow larger than the advertised receiver window.<a href="#section-2.7-3.4.1" class="pilcrow">¶</a></p>
+<p id="section-2.7-3.4.2">If we receive three duplicate ACKs we assume the message is lost and retransmit it immediately (fast retransmit). We then set our <code>cwnd</code> to half of its current size and continue with the congestion avoidance phase.<a href="#section-2.7-3.4.2" class="pilcrow">¶</a></p>
+<p id="section-2.7-3.4.3">Once a timeout occurs <code>cwnd</code> is reset to 1 and the slow start threshold is set to half of the number of messages in-flight. We then go back to the slow start phase.<a href="#section-2.7-3.4.3" class="pilcrow">¶</a></p>
+</dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="message-formats">
+<section id="section-3">
+      <h2 id="name-message-formats-2">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-message-formats-2" class="section-name selfRef">Message Formats</a>
+      </h2>
+<p id="section-3-1">RFT knows two types of messages: <code>Control</code> and <code>Chunk</code> messages. Messages <span class="bcp14">MUST</span> have a little-endian format.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">All RFT messages contain a stream ID as well as a message type. If there is no stream ID (e.g., because a stream is yet to be established) it <span class="bcp14">MUST</span> be set to <code>0</code>.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<span id="name-all-mandatory-fields-of-any-"></span><div id="RftMessageFormat">
+<figure id="figure-3">
+        <div class="artwork art-text alignLeft" id="section-3-3.1">
+<pre>Message {
+    U16 StreamId,
+    U8 MessageType,
+    U64 SequenceNumber,
+    // More fields, depending on the message
+}
+</pre>
+</div>
+<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
+<a href="#name-all-mandatory-fields-of-any-" class="selfRef">All mandatory fields of any RFT message.</a>
+        </figcaption></figure>
+</div>
+<div id="control-messages">
+<section id="section-3.1">
+        <h3 id="name-control-messages-2">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-control-messages-2" class="section-name selfRef">Control Messages</a>
+        </h3>
+<p id="section-3.1-1">Control messages are typically very small and aren't secured by themselves. Instead, they rely on UDP's checksum for error correction. A message is a control message if its MessageType is greater than 0.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<div id="ClientHello">
+<section id="section-3.1.1">
+          <h4 id="name-client_hello-2">
+<a href="#section-3.1.1" class="section-number selfRef">3.1.1. </a><a href="#name-client_hello-2" class="section-name selfRef">CLIENT_HELLO</a>
+          </h4>
+<p id="section-3.1.1-1">A <code>CLIENT_HELLO</code> message is sent by a client to a server to establish a new stream. Since a stream is not established yet, the field <span class="bcp14">MUST</span> be set to 0 by the client. The message type <span class="bcp14">MUST</span> be set to 1.<a href="#section-3.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.1-2">The <code>Version</code> field carries information about the RFT version that the client can support. It <span class="bcp14">MUST</span> be set to the highest version a client can support. For RFT 0.2 the value <span class="bcp14">MUST</span> be 0x01.<a href="#section-3.1.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1.1-3">The <code>NextHeaderType</code> and <code>NextHeaderOffset</code> fields aren't used in version 0.2 of RFT and <span class="bcp14">MUST</span> be set to 0 by the client. The server <span class="bcp14">MUST</span> reject all messages with different values. In the future they can be used for additional parameters like encryption and compression.<a href="#section-3.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1.1-4"><code>WindowInMessages</code> tells the server the advertised receiver window.<a href="#section-3.1.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.1.1-5"><code>StartChunk</code> allows the client to specify an offset from which to start chunk transmission. The first chunk has an offset of <code>0</code>.<a href="#section-3.1.1-5" class="pilcrow">¶</a></p>
+<p id="section-3.1.1-6"><code>Filename</code> contains the filename of the requested file. It <strong>must</strong> be absolute. It <span class="bcp14">MAY</span> be empty, in this case the server replies with a file listing.<a href="#section-3.1.1-6" class="pilcrow">¶</a></p>
+<span id="name-a-client_hello-message-2"></span><figure id="figure-4">
+            <div class="artwork art-text alignLeft" id="section-3.1.1-7.1">
+<pre>ClientHello {
+    U16 StreamId = 0x00,
+    U8 MessageType = 0x01,
+    U64 SequenceNumber = 0x00,
+    U8 Version = 0x01,
+    U8 NextHeaderType = 0x00,
+    U8 NextHeaderOffset = 0x00,
+    U16 WindowInMessages,
+    U32 StartChunk,
+    string Filename
+}
+</pre>
+</div>
+<figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
+<a href="#name-a-client_hello-message-2" class="selfRef">A CLIENT_HELLO message.</a>
+            </figcaption></figure>
+</section>
+</div>
+<div id="ServerHello">
+<section id="section-3.1.2">
+          <h4 id="name-server_hello-2">
+<a href="#section-3.1.2" class="section-number selfRef">3.1.2. </a><a href="#name-server_hello-2" class="section-name selfRef">SERVER_HELLO</a>
+          </h4>
+<p id="section-3.1.2-1">The <code>SERVER_HELLO</code> message is sent as a response by the server.<a href="#section-3.1.2-1" class="pilcrow">¶</a></p>
+<ul>
+<li id="section-3.1.2-2.1">The <code>StreamId</code> field <span class="bcp14">MUST</span> contain the stream ID that the server has allocated for this stream.<a href="#section-3.1.2-2.1" class="pilcrow">¶</a>
+</li>
+<li id="section-3.1.2-2.2">The <code>MessageType</code> <span class="bcp14">MUST</span> be set to 2.<a href="#section-3.1.2-2.2" class="pilcrow">¶</a>
+</li>
+<li id="section-3.1.2-2.3">The <code>Version</code> field <span class="bcp14">MUST</span> contain <code>min(client version, maximum protocol version the server supports)</code>.<a href="#section-3.1.2-2.3" class="pilcrow">¶</a>
+</li>
+<li id="section-3.1.2-2.4">The <code>NextHeaderType</code> and <code>NextHeaderOffset</code> fields aren't used in version 0.2 of RFT and <span class="bcp14">MUST</span> be set to 0 by the server. The client <span class="bcp14">MUST</span> reject all messages with different values.<a href="#section-3.1.2-2.4" class="pilcrow">¶</a>
+</li>
+<li id="section-3.1.2-2.5">The <code>WindowInMessages</code> field tells the client the advertised receiver window.<a href="#section-3.1.2-2.5" class="pilcrow">¶</a>
+</li>
+<li id="section-3.1.2-2.6">The <code>Checksum</code> field contains the SHA-3 hash <span>[<a href="#SHA3" class="xref">SHA3</a>]</span> of the entire file.
+[comment] # I think this one requires discussion: do we need to include the LastModified in the protocol?<a href="#section-3.1.2-2.6" class="pilcrow">¶</a>
+</li>
+<li id="section-3.1.2-2.7">The <code>LastModified</code> field contains the number of seconds since 01. January 1970. It is in the server's timezone. Coordination about timezones between client and server is out of scope for this protocol.<a href="#section-3.1.2-2.7" class="pilcrow">¶</a>
+</li>
+<li id="section-3.1.2-2.8">The <code>FileSizeBytes</code> contains the file's size.<a href="#section-3.1.2-2.8" class="pilcrow">¶</a>
+</li>
+</ul>
+<span id="name-a-server_hello-message-2"></span><figure id="figure-5">
+            <div class="artwork art-text alignLeft" id="section-3.1.2-3.1">
+<pre>ServerHello {
+    U16 StreamId,
+    U8 MessageType = 0x02,
+    U64 SequenceNumber = 0x00,
+    U8 Version,
+    U8 NextHeaderType = 0x00,
+    U8 NextHeaderOffset = 0x00,
+    U16 WindowInMessages,
+    U256 Checksum,
+    I64 LastModified,
+    U64 FileSizeBytes
+}
+</pre>
+</div>
+<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<a href="#name-a-server_hello-message-2" class="selfRef">A SERVER_HELLO message.</a>
+            </figcaption></figure>
+</section>
+</div>
+<div id="ACK">
+<section id="section-3.1.3">
+          <h4 id="name-ack-2">
+<a href="#section-3.1.3" class="section-number selfRef">3.1.3. </a><a href="#name-ack-2" class="section-name selfRef">ACK</a>
+          </h4>
+<p id="section-3.1.3-1">An <code>ACK</code> message is sent anytime someone wants to acknowledge something.
+[comment] # Do we need to send a WindowInMessages every single ACK?
+* <code>WindowInMessages</code> corresponds to the receive window of the sender. It's measured in messages.
+* <code>AckNumber</code> is the sequence number of the last message that should be acknowledged.<a href="#section-3.1.3-1" class="pilcrow">¶</a></p>
+<span id="name-an-ack-message-2"></span><figure id="figure-6">
+            <div class="artwork art-text alignLeft" id="section-3.1.3-2.1">
+<pre>ACK {
+    U16 StreamId,
+    U8 MessageType = 0x03,
+    U64 SequenceNumber,
+    U16 WindowInMessages, //Number of chunk messages that can be held in the client's buffer
+    U64 AckNumber
+}
+</pre>
+</div>
+<figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
+<a href="#name-an-ack-message-2" class="selfRef">An ACK message.</a>
+            </figcaption></figure>
+<p id="section-3.1.3-3">[comment] # Do we need FIN anyway? The transmission could end when sending the empty data packet, and this one creates a new condition branch to consider.<a href="#section-3.1.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="FIN">
+<section id="section-3.1.4">
+          <h4 id="name-fin-2">
+<a href="#section-3.1.4" class="section-number selfRef">3.1.4. </a><a href="#name-fin-2" class="section-name selfRef">FIN</a>
+          </h4>
+<p id="section-3.1.4-1">A <code>FIN</code> message can be sent to close a stream.<a href="#section-3.1.4-1" class="pilcrow">¶</a></p>
+<span id="name-a-fin-message-2"></span><figure id="figure-7">
+            <div class="artwork art-text alignLeft" id="section-3.1.4-2.1">
+<pre>FIN {
+    U16 StreamId,
+    U8 MessageType = 0x04
+    U64 SequenceNumber
+}
+</pre>
+</div>
+<figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
+<a href="#name-a-fin-message-2" class="selfRef">A FIN message.</a>
+            </figcaption></figure>
+<p id="section-3.1.4-3">[comment] # According to discussion this thing could be taken care of by resending the last correct ACK from a new address instead - we know now where to start sending from again.<a href="#section-3.1.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="ConnectionMoved">
+<section id="section-3.1.5">
+          <h4 id="name-connection_moved-2">
+<a href="#section-3.1.5" class="section-number selfRef">3.1.5. </a><a href="#name-connection_moved-2" class="section-name selfRef">CONNECTION_MOVED</a>
+          </h4>
+<p id="section-3.1.5-1">A <code>CONNECTION_MOVED</code> message can be sent by either the client or the server. It indicates that the sender's IP address has changed and any future communication should be sent to the new address.<a href="#section-3.1.5-1" class="pilcrow">¶</a></p>
+<span id="name-a-connection_moved-message-2"></span><figure id="figure-8">
+            <div class="artwork art-text alignLeft" id="section-3.1.5-2.1">
+<pre>ConnectionMoved {
+    U16 StreamId,
+    U8 MessageType = 0x07,
+    U64 SequenceNumber = 0x00,
+}
+</pre>
+</div>
+<figcaption><a href="#figure-8" class="selfRef">Figure 8</a>:
+<a href="#name-a-connection_moved-message-2" class="selfRef">A CONNECTION_MOVED message.</a>
+            </figcaption></figure>
+</section>
+</div>
+<div id="Error">
+<section id="section-3.1.6">
+          <h4 id="name-error-2">
+<a href="#section-3.1.6" class="section-number selfRef">3.1.6. </a><a href="#name-error-2" class="section-name selfRef">ERROR</a>
+          </h4>
+<p id="section-3.1.6-1">The <code>ERROR</code> message informs clients of an error. The tuple <code>(ErrorCategory, ErrorCode)</code> uniquely identifies each error. An optional <code>Message</code> field <span class="bcp14">MAY</span> give additional information, otherwise it <span class="bcp14">MUST</span> be empty ("").<a href="#section-3.1.6-1" class="pilcrow">¶</a></p>
+<span id="name-a-error-message-2"></span><figure id="figure-9">
+            <div class="artwork art-text alignLeft" id="section-3.1.6-2.1">
+<pre>Error {
+    U16 StreamId,
+    U8 MessageType = 0xFF,
+    U64 SequenceNumber = 0x00,
+    U8 ErrorCategory,
+    U8 ErrorCode,
+    string Message
+}
+</pre>
+</div>
+<figcaption><a href="#figure-9" class="selfRef">Figure 9</a>:
+<a href="#name-a-error-message-2" class="selfRef">A ERROR message.</a>
+            </figcaption></figure>
+<span id="name-list-of-all-valid-error-cate"></span><table class="center" id="table-1">
+            <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-list-of-all-valid-error-cate" class="selfRef">List of all valid error category/ error value combinations.</a>
+            </caption>
+<thead>
+              <tr>
+                <th class="text-left" rowspan="1" colspan="1">ErrorCategory</th>
+                <th class="text-left" rowspan="1" colspan="1">ErrorValue</th>
+                <th class="text-left" rowspan="1" colspan="1">Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">0</td>
+                <td class="text-left" rowspan="1" colspan="1">According to the macros in glibc's error codes (see <a href="https://www.gnu.org/software/libc/manual/html_node/Error-Codes.html">https://www.gnu.org/software/libc/manual/html_node/Error-Codes.html</a>).</td>
+                <td class="text-left" rowspan="1" colspan="1">Same meaning as the glibc error codes.</td>
+              </tr>
+            </tbody>
+          </table>
+</section>
+</div>
+</section>
+</div>
+<div id="Chunk">
+<section id="section-3.2">
+        <h3 id="name-chunk-messages-2">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-chunk-messages-2" class="section-name selfRef">Chunk Messages</a>
+        </h3>
+<p id="section-3.2-1">A <code>CHUNK</code> message contains the first 8 bytes of the SHA-3 (<span>[<a href="#SHA3" class="xref">SHA3</a>]</span>) checksum of the chunk. The rest are 1001 bytes (i.e. one <em>chunk</em> of the file). We chose 997 bytes so that the size of the entire UDP datagram is equal to 997 bytes.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<span id="name-the-structure-of-a-chunk-mes"></span><div id="chunkMessage">
+<figure id="figure-10">
+          <div class="artwork art-text alignLeft" id="section-3.2-2.1">
+<pre>ChunkMessage {
+    U16 StreamId,
+    U8 MessageType = 0x00,
+    U64 SequenceNumber = 0x00,
+    U8[8] Checksum
+    U8[997] Payload
+}
+</pre>
+</div>
+<figcaption><a href="#figure-10" class="selfRef">Figure 10</a>:
+<a href="#name-the-structure-of-a-chunk-mes" class="selfRef">The structure of a chunk message</a>
+          </figcaption></figure>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="future-work">
+<section id="section-4">
+      <h2 id="name-future-work-2">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-future-work-2" class="section-name selfRef">Future Work</a>
+      </h2>
+<div id="allowing-a-variable-size-chunk-message">
+<section id="section-4.1">
+        <h3 id="name-allowing-a-variable-size-chu">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-allowing-a-variable-size-chu" class="section-name selfRef">Allowing a variable size chunk message</a>
+        </h3>
+<p id="section-4.1-1">In the future it might prove advantageous to have chunk messages with variable sizes. We could support this by introducing a "length" field.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="hash-algorithm-negotiation">
+<section id="section-4.2">
+        <h3 id="name-hash-algorithm-negotiation-2">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-hash-algorithm-negotiation-2" class="section-name selfRef">Hash algorithm negotiation</a>
+        </h3>
+<p id="section-4.2-1">In the future there will be better hash algorithms than SHA-3. We could introduce some form of hash negotiation.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<section id="section-5">
+      <h2 id="name-normative-references-2">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-normative-references-2" class="section-name selfRef">Normative References</a>
+      </h2>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+<dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
+<dt id="RFC3629">[RFC3629]</dt>
+<dd>
+<span class="refAuthor">Yergeau, F.</span>, <span class="refTitle">"UTF-8, a transformation format of ISO 10646"</span>, <span class="seriesInfo">STD 63</span>, <span class="seriesInfo">RFC 3629</span>, <span class="seriesInfo">DOI 10.17487/RFC3629</span>, <time datetime="2003-11">November 2003</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc3629">https://www.rfc-editor.org/info/rfc3629</a>&gt;</span>. </dd>
+<dt id="RFC8174">[RFC8174]</dt>
+<dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
+</dl>
+</section>
+<section id="section-6">
+      <h2 id="name-informative-references-2">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-informative-references-2" class="section-name selfRef">Informative References</a>
+      </h2>
+<dl class="references">
+<dt id="RFC0768">[RFC0768]</dt>
+<dd>
+<span class="refAuthor">Postel, J.</span>, <span class="refTitle">"User Datagram Protocol"</span>, <span class="seriesInfo">STD 6</span>, <span class="seriesInfo">RFC 768</span>, <span class="seriesInfo">DOI 10.17487/RFC0768</span>, <time datetime="1980-08">August 1980</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc768">https://www.rfc-editor.org/info/rfc768</a>&gt;</span>. </dd>
+<dt id="RFC5681">[RFC5681]</dt>
+<dd>
+<span class="refAuthor">Allman, M.</span><span class="refAuthor">, Paxson, V.</span><span class="refAuthor">, and E. Blanton</span>, <span class="refTitle">"TCP Congestion Control"</span>, <span class="seriesInfo">RFC 5681</span>, <span class="seriesInfo">DOI 10.17487/RFC5681</span>, <time datetime="2009-09">September 2009</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc5681">https://www.rfc-editor.org/info/rfc5681</a>&gt;</span>. </dd>
+<dt id="RFC9000">[RFC9000]</dt>
+<dd>
+<span class="refAuthor">Iyengar, J., Ed.</span><span class="refAuthor"> and M. Thomson, Ed.</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="seriesInfo">RFC 9000</span>, <span class="seriesInfo">DOI 10.17487/RFC9000</span>, <time datetime="2021-05">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9000">https://www.rfc-editor.org/info/rfc9000</a>&gt;</span>. </dd>
+<dt id="SHA3">[SHA3]</dt>
+<dd>
+<span class="refAuthor">National Institute of Standards and Technology</span>, <span class="refTitle">"SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions"</span>, <time datetime="2015-08">August 2015</time>, <span>&lt;<a href="https://doi.org/10.6028/NIST.FIPS.202">https://doi.org/10.6028/NIST.FIPS.202</a>&gt;</span>. </dd>
+</dl>
+</section>
+<div id="authors-addresses">
+<section id="section-appendix.a">
+      <h2 id="name-authors-addresses-2">
+<a href="#name-authors-addresses-2" class="section-name selfRef">Authors' Addresses</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Alexander Maslew</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:alexander.maslew@tum.de" class="email">alexander.maslew@tum.de</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Frederic Schoenberger</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:frederic.schoenberger@tum.de" class="email">frederic.schoenberger@tum.de</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Jacek Kusnierz</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:jacek.kusnierz@tum.de" class="email">jacek.kusnierz@tum.de</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Eugenio Berretta</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:eugeniovinicioberretta@gmail.com" class="email">eugeniovinicioberretta@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Aleksandra Swierkowska</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:aleksandra.swierkowska@tum.de" class="email">aleksandra.swierkowska@tum.de</a>
+</div>
+</address>
+</section>
+</div>
+<script>var toc = document.getElementById("toc");
+var tocToggle = toc.querySelector("h2");
+var tocNav = toc.querySelector("nav");
+
+// mobile menu toggle
+tocToggle.onclick = function(event) {
+    if (window.innerWidth < 1024) {
+ var tocNavDisplay = tocNav.currentStyle ? tocNav.currentStyle.display : getComputedStyle(tocNav, null).display;
+ if (tocNavDisplay == "none") {
+     tocNav.style.display = "block";
+ } else {
+     tocNav.style.display = "none";
+ }
+    }
+}
+
+// toc anchor scroll to anchor
+tocNav.addEventListener("click", function (event) {
+    event.preventDefault();
+    if (event.target.nodeName == 'A') {
+ if (window.innerWidth < 1024) {
+     tocNav.style.display = "none";
+ }
+ var href = event.target.getAttribute("href");
+ var anchorId = href.substr(1);
+ var anchor =  document.getElementById(anchorId);
+ anchor.scrollIntoView(true);
+ window.history.pushState("","",href);
+    }
+});
+
+// switch toc mode when window resized
+window.onresize = function () {
+    if (window.innerWidth < 1024) {
+ tocNav.style.display = "none";
+    } else {
+ tocNav.style.display = "block";
+    }
+}
+</script>
+</body>
+</html>

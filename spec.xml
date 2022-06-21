@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="draft-group18-rft-02" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+
+<front>
+<title abbrev="RFT">Robust File Transfer</title><seriesInfo value="draft-group18-rft-02" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
+<author initials="A." surname="Maslew" fullname="Alexander Maslew"><organization></organization><address><postal><street></street>
+</postal><email>alexander.maslew@tum.de</email>
+</address></author><author initials="F." surname="Schoenberger" fullname="Frederic Schoenberger"><organization></organization><address><postal><street></street>
+</postal><email>frederic.schoenberger@tum.de</email>
+</address></author><author initials="J." surname="Kusnierz" fullname="Jacek Kusnierz"><organization></organization><address><postal><street></street>
+</postal><email>jacek.kusnierz@tum.de</email>
+</address></author><author initials="E." surname="Berretta" fullname="Eugenio Berretta"><organization></organization><address><postal><street></street>
+</postal><email>eugeniovinicioberretta@gmail.com</email>
+</address></author><author initials="A." surname="Swierkowska" fullname="Aleksandra Swierkowska"><organization></organization><address><postal><street></street>
+</postal><email>aleksandra.swierkowska@tum.de</email>
+</address></author><date year="2022" month="June" day="22"></date>
+<area>Internet</area>
+<workgroup>Group I &amp; Group VII</workgroup>
+
+</front>
+
+<middle>
+
+<section anchor="introduction"><name>Introduction</name>
+<t>Robust File Transfer (RFT) is a file-transfer protocol on top of UDP <xref target="RFC0768"></xref>. This document defines version 0.2 of RFT. In spirit it is very similar to QUIC <xref target="RFC9000"></xref>, albeit arguably a bit easier.</t>
+<t>RFT is connection-oriented and stateful. A RFT <em>stream</em> is a unidirectional ordered sequences of byte between a <em>client</em> and a <em>server</em>. Streams support IP address migration, flow control and congestion control. The protocol guarantees in-order delivery for all messages belonging to a stream. There is no such guarantee for messages belonging to different streams.</t>
+<t>RFT <em>messages</em> are either <em>chunk messages</em>, containing file data, or <em>control messages</em>. Control messages are used to request and signal state changes on either the server or the client. There's a 1:1 correspondence between a RFT message and a UDP datagram.</t>
+<t>RFT employs flow and congestion control on a per-stream basis.</t>
+
+<section anchor="terms-and-definitions"><name>Terms and Definitions</name>
+<t>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;, &quot;NOT RECOMMENDED&quot;, &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this document are to be interpreted as described in BCP14 <xref target="RFC2119"></xref> <xref target="RFC8174"></xref> when, and only when, they appear in all capitals, as shown here.</t>
+<t>Commonly used terms in this document:</t>
+
+<dl spacing="compact">
+<dt>Client:</dt>
+<dd>An endpoint that participates in a stream and wants to receive a file.</dd>
+<dt>Server:</dt>
+<dd>An endpoint that participates in a stream and wants to send a file.</dd>
+<dt>Stream:</dt>
+<dd>An ordered unidirectional (Client to Server) sequence of bytes. It is guaranteed that each byte will arrive and that it will arrive in exactly the same order it was sent out.</dd>
+</dl>
+</section>
+
+<section anchor="notation"><name>Notation</name>
+<t>We define <tt>U8</tt>, <tt>U16</tt>, <tt>U32</tt>, <tt>U64</tt> and <tt>U128</tt>, <tt>U256</tt> as unsigned 8-, 16-, 32-, 64-, 128-, or 256-bit integers. <tt>I8</tt>, <tt>I16</tt>, <tt>I32</tt>, <tt>I64</tt>, <tt>I128</tt>, and <tt>I256</tt> are signed 8-, 16-, 32-, 64-, 128-, or 256-bit integers. A <tt>string</tt> is a UTF-8 <xref target="RFC3629"></xref> encoded zero-terminated string. The syntax <tt>DataType[]</tt> defines a variable-length array of DataType; <tt>DataType[N]</tt> a fixed size array with <tt>N</tt> elements of type <tt>DataType</tt>.</t>
+<t>Messages are represented in a C-style way (see <xref target="exampleMessage"></xref>). They may be annotated by C-style comments. All members are laid out continuously on wire, any padding will be made explicit. If a field has a constant value we write it in the form of an assignment. We use the prefix <tt>0x</tt> to denote hexadecimal values.</t>
+<figure anchor="exampleMessage"><name>Example Message</name>
+<artwork>ExampleMessage {
+    U8 firstMember = 42,
+    I8 secondMember = 0x01, // A hexadecimal value
+    U16 padding0,
+    string thirdMember,
+    I32[16] array
+}
+</artwork>
+</figure>
+</section>
+</section>
+
+<section anchor="streams"><name>Streams</name>
+<t>The protocol is based on streams. Streams are ordered sequences of bytes. RFT guarantees that all messages in a stream will arrive in-order (or will be retransmitted). There is not happened-before relation between different messages in different streams. A stream represents exactly one filepath on the server.</t>
+<t>A stream can be established between a client and a server. A stream is identified by a <strong>Stream ID</strong>, a unique U16 value greater than 0. A stream ID is chosen by the server. A server <bcp14>MAY</bcp14> choose its stream IDs however it sees fit. Each stream contains the following state:</t>
+
+<ul spacing="compact">
+<li><strong>Encryption</strong>. Right now, we don't support any form of encryption.</li>
+<li><strong>Compression</strong>. Right now, we don't support any kind of compression.</li>
+<li><strong>Flow control</strong>. We support flow control with a sliding window. See <xref target="FlowControl"></xref> for details.</li>
+<li><strong>Congestion control</strong>. We support congestion control with an algorithm similar to TCP Reno. See <xref target="CongestionControl"></xref> for details.</li>
+<li><strong>Connection migration</strong>. We support migrating a stream. See <xref target="StreamMigration"></xref>.</li>
+</ul>
+
+<section anchor="establishing-a-stream"><name>Establishing a stream</name>
+<t>A stream is established by a three way handshake:</t>
+<figure><name>3-way handshake of RFT
+</name>
+<artwork>
+             +----------------------+
+    +-------&gt;|       Initial        |
+    |        +----------+-----------+
+    |                   |
+Error or                | CLIENT_HELLO
+Timeout                 |
+    |                   v
+    |        +----------------------+
+    +--------| Parse Client Request |
+    |        +----------+-----------+
+    |                   |
+    |                   | SERVER_HELLO
+    |                   |
+    |                   v
+    |        +----------------------+
+    +--------| Parse Server Request |
+             +----------+-----------+
+                        |
+                        | ACK
+                        |
+                        v
+             +----------------------+
+             |      Established     |
+             +----------------------+
+
+</artwork>
+</figure>
+
+<ol>
+<li><t>The client sends a CLIENT_HELLO (<xref target="ClientHello"></xref>) message. The request <bcp14>MUST</bcp14> be filled with an appropriately sized <tt>WindowInMessages</tt>. To allow for the resumption of previous transmissions the client <bcp14>MAY</bcp14> choose an offset (in the chunk's payload size) of the file.</t>
+</li>
+<li><t>The server parses the CLIENT_HELLO message and tries to process the additional headers. Right now, none are defined, so they <bcp14>MUST</bcp14> be set to 0.</t>
+
+<ol spacing="compact">
+<li>In case of success, the server responds with a SERVER_HELLO (<xref target="ServerHello"></xref>) message. It assigns a unique stream ID. The request <bcp14>MUST</bcp14> be filled with an appropriately sized <tt>WindowInMessages</tt> and the stream ID.</li>
+<li>In case of an error the server responds with an appropriate ERROR (<xref target="Error"></xref>) message. The server <bcp14>MAY</bcp14> pose arbitrary constraints. For example, it may not allow two streams to be created for the same file.</li>
+</ol></li>
+<li><t>The client waits at most 5 seconds for the SERVER_HELLO message. If it was not received, it <bcp14>MUST</bcp14> retry to establish the stream (i.e., start at step 1). Any messages that are received later <bcp14>SHALL</bcp14> be discarded.</t>
+<t>The client parses the SERVER_HELLO message and tries to process the additional headers. Right now, none are defined, so they <bcp14>MUST</bcp14> be set to 0.</t>
+</li>
+<li><t>If the client accepts the headers it sends an ACK (<xref target="ACK"></xref>) message to the server. The <tt>SequenceNumber</tt> <bcp14>MUST</bcp14> be set to 0. This concludes the stream establishing process.</t>
+</li>
+</ol>
+</section>
+
+<section anchor="ErrorHandling"><name>Message sending</name>
+<t>Both endpoints must validate all messages (e.g. by using the checksums). All valid messages in a stream except for ACKs themselves <bcp14>MUST</bcp14> be acknowledged using an ACK message. Each partner in a stream keeps track of the number of bytes the other side has sent. Both sides start out with a <tt>SequenceNumber</tt> of 0 after the initial handshake. Multiple messages <bcp14>MAY</bcp14> be acknowledged in one message (i.e., cumulative ACKs). ACKs <bcp14>MUST</bcp14> always contain sequence numbers that correspond to whole messages.</t>
+<t>For each message, the <tt>SequenceNumber</tt> is increased by the size of the message in bytes (e.g., what you would get for the expression <tt>sizeof(message)</tt>). In other words: The sequence number of a message is the starting position (in bytes) of this particular message in the stream.</t>
+<t>If a message arrives with a <tt>SequenceNumber</tt> larger than the one expected, the receiver <bcp14>MUST</bcp14> discard it and send an ACK with the last valid sequence number.</t>
+<t>If the sender doesn't receive an ACK within 5 seconds of sending the message, the message is considered lost and <bcp14>MUST</bcp14> be retransmitted.</t>
+</section>
+
+<section anchor="sending-data"><name>Sending data</name>
+<t>After the handshake completes, the server <bcp14>MUST</bcp14> start sending the required file chunks (<xref target="Chunk"></xref>). A chunk of a file is 997 bytes. The server <bcp14>MUST</bcp14> respect the client's requested offset from the stream 3-way handshake. If less than 997 bytes of the file remain, the server <bcp14>MUST</bcp14> fill the rest of the message with 0x00. A client <bcp14>MUST</bcp14> ignore this padding.</t>
+
+<section anchor="file-listing"><name>File listing</name>
+<t>A special case is the file with a path of &quot;&quot; (the empty string). In this case the server <bcp14>MUST</bcp14> produce a file listing, that prints the path to all available files separated by <tt>\r\n</tt>. Even though this file is purely virtual, the exact same mechanisms apply.</t>
+</section>
+</section>
+
+<section anchor="closing-a-stream"><name>Closing a stream</name>
+<t>A stream can be closed at any time by either the client or the server. This can be done by sending a FIN (<xref target="FIN"></xref>) message. The other endpoint <bcp14>MUST</bcp14> ACK the message before resources can be freed. Upon reception all messages still in-flight <bcp14>MAY</bcp14> be discarded by both client and server. A client <bcp14>MAY</bcp14> choose to process outstanding CHUNK messages, though.</t>
+</section>
+
+<section anchor="StreamMigration"><name>Stream Migration</name>
+<t>Streams are identified by a stream ID. If the IP address of either the client or the server changes they <bcp14>MUST</bcp14> inform the other party with a CONNECTION_MOVED (<xref target="ConnectionMoved"></xref>) message. The receiver <bcp14>MUST</bcp14> use the information from the lower layers to change its state and send all further messages to the new address.</t>
+<t>Any messages already in-flight <bcp14>MAY</bcp14> be processed by both the server and the client. If either opts not to receive them, normal error handling (<xref target="ErrorHandling"></xref>) applies.</t>
+</section>
+
+<section anchor="FlowControl"><name>Flow control</name>
+<t>Each ACK message (<xref target="ACK"></xref>) contains <tt>WindowInMessages</tt>, the amount of messages a client may receive at any time. A server <bcp14>MUST</bcp14> take care to never exceed this limit. If the window remains zero for five consecutive messages the sender <bcp14>MUST</bcp14> assume the receiver has failed and terminate the stream.</t>
+</section>
+
+<section anchor="CongestionControl"><name>Congestion control</name>
+<t>Congestion control is done with an algorithm similar to TCP's congestion control <xref target="RFC5681"></xref>.</t>
+<t>The amount of messages in-flight is limited by a congestion window <tt>cwnd</tt>. The following rules <bcp14>SHALL</bcp14> apply to determine the size of the window.</t>
+
+<dl>
+<dt>Slow Start:</dt>
+<dd><tt>cwnd</tt> is set to 1. For each received ACK or SERVER_HELLO message the window should be determined as <tt>cwndNew = min(cwndOld * 2, receiverWindow)</tt>. This phase stops when the slow start threshold is reached.</dd>
+<dt>Congestion Avoidance:</dt>
+<dd><t>Once slow start has stopped, we reach this phase. Here we increase our <tt>cwnd</tt> by 1 if all messages in this window have been acknowledged. Our <tt>cwnd</tt> still may not grow larger than the advertised receiver window.</t>
+<t>If we receive three duplicate ACKs we assume the message is lost and retransmit it immediately (fast retransmit). We then set our <tt>cwnd</tt> to half of its current size and continue with the congestion avoidance phase.</t>
+<t>Once a timeout occurs <tt>cwnd</tt> is reset to 1 and the slow start threshold is set to half of the number of messages in-flight. We then go back to the slow start phase.</t>
+</dd>
+</dl>
+</section>
+</section>
+
+<section anchor="message-formats"><name>Message Formats</name>
+<t>RFT knows two types of messages: <tt>Control</tt> and <tt>Chunk</tt> messages. Messages <bcp14>MUST</bcp14> have a little-endian format.</t>
+<t>All RFT messages contain a stream ID as well as a message type. If there is no stream ID (e.g., because a stream is yet to be established) it <bcp14>MUST</bcp14> be set to <tt>0</tt>.</t>
+<figure anchor="RftMessageFormat"><name>All mandatory fields of any RFT message.
+</name>
+<artwork>Message {
+    U16 StreamId,
+    U8 MessageType,
+    U64 SequenceNumber,
+    // More fields, depending on the message
+}
+</artwork>
+</figure>
+
+<section anchor="control-messages"><name>Control Messages</name>
+<t>Control messages are typically very small and aren't secured by themselves. Instead, they rely on UDP's checksum for error correction. A message is a control message if its MessageType is greater than 0.</t>
+
+<section anchor="ClientHello"><name>CLIENT_HELLO</name>
+<t>A <tt>CLIENT_HELLO</tt> message is sent by a client to a server to establish a new stream. Since a stream is not established yet, the field <bcp14>MUST</bcp14> be set to 0 by the client. The message type <bcp14>MUST</bcp14> be set to 1.</t>
+<t>The <tt>Version</tt> field carries information about the RFT version that the client can support. It <bcp14>MUST</bcp14> be set to the highest version a client can support. For RFT 0.2 the value <bcp14>MUST</bcp14> be 0x01.</t>
+<t>The <tt>NextHeaderType</tt> and <tt>NextHeaderOffset</tt> fields aren't used in version 0.2 of RFT and <bcp14>MUST</bcp14> be set to 0 by the client. The server <bcp14>MUST</bcp14> reject all messages with different values. In the future they can be used for additional parameters like encryption and compression.</t>
+<t><tt>WindowInMessages</tt> tells the server the advertised receiver window.</t>
+<t><tt>StartChunk</tt> allows the client to specify an offset from which to start chunk transmission. The first chunk has an offset of <tt>0</tt>.</t>
+<t><tt>Filename</tt> contains the filename of the requested file. It <strong>must</strong> be absolute. It <bcp14>MAY</bcp14> be empty, in this case the server replies with a file listing.</t>
+<figure><name>A CLIENT_HELLO message.
+</name>
+<artwork>ClientHello {
+    U16 StreamId = 0x00,
+    U8 MessageType = 0x01,
+    U64 SequenceNumber = 0x00,
+    U8 Version = 0x01,
+    U8 NextHeaderType = 0x00,
+    U8 NextHeaderOffset = 0x00,
+    U16 WindowInMessages,
+    U32 StartChunk,
+    string Filename
+}
+</artwork>
+</figure>
+</section>
+
+<section anchor="ServerHello"><name>SERVER_HELLO</name>
+<t>The <tt>SERVER_HELLO</tt> message is sent as a response by the server.</t>
+
+<ul spacing="compact">
+<li>The <tt>StreamId</tt> field <bcp14>MUST</bcp14> contain the stream ID that the server has allocated for this stream.</li>
+<li>The <tt>MessageType</tt> <bcp14>MUST</bcp14> be set to 2.</li>
+<li>The <tt>Version</tt> field <bcp14>MUST</bcp14> contain <tt>min(client version, maximum protocol version the server supports)</tt>.</li>
+<li>The <tt>NextHeaderType</tt> and <tt>NextHeaderOffset</tt> fields aren't used in version 0.2 of RFT and <bcp14>MUST</bcp14> be set to 0 by the server. The client <bcp14>MUST</bcp14> reject all messages with different values.</li>
+<li>The <tt>WindowInMessages</tt> field tells the client the advertised receiver window.</li>
+<li>The <tt>Checksum</tt> field contains the SHA-3 hash <xref target="SHA3"></xref> of the entire file.
+[comment] # I think this one requires discussion: do we need to include the LastModified in the protocol?</li>
+<li>The <tt>LastModified</tt> field contains the number of seconds since 01. January 1970. It is in the server's timezone. Coordination about timezones between client and server is out of scope for this protocol.</li>
+<li>The <tt>FileSizeBytes</tt> contains the file's size.</li>
+</ul>
+<figure><name>A SERVER_HELLO message.
+</name>
+<artwork>ServerHello {
+    U16 StreamId,
+    U8 MessageType = 0x02,
+    U64 SequenceNumber = 0x00,
+    U8 Version,
+    U8 NextHeaderType = 0x00,
+    U8 NextHeaderOffset = 0x00,
+    U16 WindowInMessages,
+    U256 Checksum,
+    I64 LastModified,
+    U64 FileSizeBytes
+}
+</artwork>
+</figure>
+</section>
+
+<section anchor="ACK"><name>ACK</name>
+<t>An <tt>ACK</tt> message is sent anytime someone wants to acknowledge something.
+[comment] # Do we need to send a WindowInMessages every single ACK?
+* <tt>WindowInMessages</tt> corresponds to the receive window of the sender. It's measured in messages.
+* <tt>AckNumber</tt> is the sequence number of the last message that should be acknowledged.</t>
+<figure><name>An ACK message.
+</name>
+<artwork>ACK {
+    U16 StreamId,
+    U8 MessageType = 0x03,
+    U64 SequenceNumber,
+    U16 WindowInMessages, //Number of chunk messages that can be held in the client's buffer
+    U64 AckNumber
+}
+</artwork>
+</figure>
+<t>[comment] # Do we need FIN anyway? The transmission could end when sending the empty data packet, and this one creates a new condition branch to consider.</t>
+</section>
+
+<section anchor="FIN"><name>FIN</name>
+<t>A <tt>FIN</tt> message can be sent to close a stream.</t>
+<figure><name>A FIN message.
+</name>
+<artwork>FIN {
+    U16 StreamId,
+    U8 MessageType = 0x04
+    U64 SequenceNumber
+}
+</artwork>
+</figure>
+<t>[comment] # According to discussion this thing could be taken care of by resending the last correct ACK from a new address instead - we know now where to start sending from again.</t>
+</section>
+
+<section anchor="ConnectionMoved"><name>CONNECTION_MOVED</name>
+<t>A <tt>CONNECTION_MOVED</tt> message can be sent by either the client or the server. It indicates that the sender's IP address has changed and any future communication should be sent to the new address.</t>
+<figure><name>A CONNECTION_MOVED message.
+</name>
+<artwork>ConnectionMoved {
+    U16 StreamId,
+    U8 MessageType = 0x07,
+    U64 SequenceNumber = 0x00,
+}
+</artwork>
+</figure>
+</section>
+
+<section anchor="Error"><name>ERROR</name>
+<t>The <tt>ERROR</tt> message informs clients of an error. The tuple <tt>(ErrorCategory, ErrorCode)</tt> uniquely identifies each error. An optional <tt>Message</tt> field <bcp14>MAY</bcp14> give additional information, otherwise it <bcp14>MUST</bcp14> be empty (&quot;&quot;).</t>
+<figure><name>A ERROR message.
+</name>
+<artwork>Error {
+    U16 StreamId,
+    U8 MessageType = 0xFF,
+    U64 SequenceNumber = 0x00,
+    U8 ErrorCategory,
+    U8 ErrorCode,
+    string Message
+}
+</artwork>
+</figure>
+<table><name>List of all valid error category/ error value combinations.</name>
+<thead>
+<tr>
+<th>ErrorCategory</th>
+<th>ErrorValue</th>
+<th>Meaning</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>0</td>
+<td>According to the macros in glibc's error codes (see <eref target="https://www.gnu.org/software/libc/manual/html_node/Error-Codes.html">https://www.gnu.org/software/libc/manual/html_node/Error-Codes.html</eref>).</td>
+<td>Same meaning as the glibc error codes.</td>
+</tr>
+</tbody>
+</table></section>
+</section>
+
+<section anchor="Chunk"><name>Chunk Messages</name>
+<t>A <tt>CHUNK</tt> message contains the first 8 bytes of the SHA-3 (<xref target="SHA3"></xref>) checksum of the chunk. The rest are 1001 bytes (i.e. one <em>chunk</em> of the file). We chose 997 bytes so that the size of the entire UDP datagram is equal to 997 bytes.</t>
+<figure anchor="chunkMessage"><name>The structure of a chunk message</name>
+<artwork>ChunkMessage {
+    U16 StreamId,
+    U8 MessageType = 0x00,
+    U64 SequenceNumber = 0x00,
+    U8[8] Checksum
+    U8[997] Payload
+}
+</artwork>
+</figure>
+</section>
+</section>
+
+<section anchor="future-work"><name>Future Work</name>
+
+<section anchor="allowing-a-variable-size-chunk-message"><name>Allowing a variable size chunk message</name>
+<t>In the future it might prove advantageous to have chunk messages with variable sizes. We could support this by introducing a &quot;length&quot; field.</t>
+</section>
+
+<section anchor="hash-algorithm-negotiation"><name>Hash algorithm negotiation</name>
+<t>In the future there will be better hash algorithms than SHA-3. We could introduce some form of hash negotiation.</t>
+</section>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3629.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+</references>
+<references><name>Informative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.0768.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5681.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.9000.xml"/>
+<reference anchor="SHA3" target="https://doi.org/10.6028/NIST.FIPS.202">
+  <front>
+    <title>SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions</title>
+    <author>
+      <organization>National Institute of Standards and Technology</organization>
+    </author>
+    <date year="2015" month="August"></date>
+  </front>
+</reference>
+</references>
+
+</back>
+
+</rfc>
